@@ -1,1 +1,8 @@
-# Nothing for now
+mariadb_major_version: 11
+__mariadb_minor_version: 4
+mariadb_version: "{{ mariadb_major_version }}.{{ __mariadb_minor_version }}" 
+# Or use "mariadb_version: lts". See https://hub.docker.com/_/mariadb
+
+mariadb_port: 3306
+mariadb_storage_path: /srv/mariadb/data
+mariadb_backup_path: /srv/mariadb/backup
