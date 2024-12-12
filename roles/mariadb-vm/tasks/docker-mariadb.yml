@@ -1,0 +1,10 @@
+- tags: always
+  include_vars: vars/mariadb-vars.yml
+
+- name: Ensure MariaDB container
+  docker_container:
+    name: mariadb
+    state: started
+    image: "mariadb:{{ mariadb_version }}"
+  tags:
+    - mariadb

@@ -35,3 +35,9 @@
   tags:
     - vm
     - vm.volumes
+
+- name: MariaDB
+  import_tasks:
+    file: docker-mariadb.yml
+  tags:
+    - mariadb
