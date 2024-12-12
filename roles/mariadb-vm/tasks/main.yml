@@ -19,3 +19,13 @@
     - vm
     - vm.os
     - vm.os.upgrade
+
+- include_tasks:
+    file: vm-volumes.yml
+    apply:
+      tags:
+        - vm
+        - vm.volumes
+  tags:
+    - vm
+    - vm.volumes

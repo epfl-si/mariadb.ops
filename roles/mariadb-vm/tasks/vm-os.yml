@@ -13,8 +13,8 @@
     state: present
   with_items:
     - nmap
+    - nfs-common
     - telnet
     - tmux
     - vim
     - git
-    - restic

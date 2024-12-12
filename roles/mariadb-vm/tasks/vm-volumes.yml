@@ -1,0 +1,8 @@
+- name: Mount an NFS volume
+  with_items: '{{ nfs_shares }}'
+  ansible.posix.mount:
+    src: '{{ item.src }}'
+    path: '{{ item.mount }}'
+    opts: '{{ item.options | default("rw,sync,hard") }}'
+    state: mounted
+    fstype: nfs

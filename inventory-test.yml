@@ -11,4 +11,7 @@ all:
             ansible_user: root
             # ansible_python_interpreter: /usr/bin/python3.9
             vip_address: "128.178.109.64"
+            nfs_shares: 
+              - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
+                mount: '/var/lib/mysql-repl'
 
