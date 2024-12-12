@@ -1,0 +1,20 @@
+
+             __  __            _       _____  ____  
+            |  \/  |          (_)     |  __ \|  _ \ 
+            | \  / | __ _ _ __ _  __ _| |  | | |_) |
+            | |\/| |/ _` | '__| |/ _` | |  | |  _ < 
+            | |  | | (_| | |  | | (_| | |__| | |_) |
+            |_|  |_|\__,_|_|  |_|\__,_|_____/|____/ 
+                                                 {{ inventory_environment }}
+    Serveur de base de données MariaDB, déployé avec Ansible.
+    Ce serveur est donc configuré "as code", depuis ce repo
+    https://github.com/epfl-si/mariadb.ops.
+    La machine est {{ ansible_host }} dans l'environnement de "{{ inventory_environment }}".
+
+    Cette machine est le PRIMARY / REPLICA (définit avec Ansible).
+    La VIP ({{ vip_address }}) est/n'est pas configurée sur cette machine.
+
+    Contactez isas-fsd@groupes.epfl.ch pour toutes questions concernant cette VM.
+
+
+-

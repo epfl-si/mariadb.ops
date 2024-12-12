@@ -18,6 +18,7 @@
   tags:
     - vm
     - vm.os
+    - vm.motd
     - vm.os.upgrade
 
 - name: Install Docker

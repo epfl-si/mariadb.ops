@@ -18,3 +18,16 @@
     - tmux
     - vim
     - git
+
+- name: Deploy the message of the day
+  ansible.builtin.template:
+    src: motd.txt
+    dest: /etc/motd
+    mode: 0644
+  tags: vm.motd
+
+- name: Add some colors to the shell
+  replace:
+    path: ~/.bashrc
+    regexp: '^#force_color_prompt=yes$'
+    replace: 'force_color_prompt=yes'
