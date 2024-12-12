@@ -20,6 +20,12 @@
     - vm.os
     - vm.os.upgrade
 
+- name: Install Docker
+  import_tasks:
+    file: install-docker.yml
+  tags:
+    - vm.os.docker
+
 - include_tasks:
     file: vm-volumes.yml
     apply:
