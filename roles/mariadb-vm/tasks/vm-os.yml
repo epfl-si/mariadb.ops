@@ -1,0 +1,20 @@
+---
+
+- name: Update all packages to their latest version
+  ansible.builtin.apt:
+    name: "*"
+    state: latest
+  when: >- 
+    "vm.os.upgrade" in ansible_run_tags
+
+- name: Convenient packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nmap
+    - telnet
+    - tmux
+    - vim
+    - git
+    - restic

@@ -1,0 +1,5 @@
+- name: "MariaDB VM + service"
+  hosts: vms
+  gather_facts: no
+  roles:
+  - role: roles/mariadb-vm

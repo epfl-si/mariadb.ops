@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+help () {
+    fatal <<HELP_MSG
+
+Usage:
+
+  $0 --list-tags
+  $0 [ -t sometag ] [ ... ]
+
+HELP_MSG
+}
+
+cd "$(cd "$(dirname "$0")"; pwd)"
+
+ensure_suitcase () {
+    if ! test -f ansible-deps-cache/.versions 2>/dev/null; then
+        curl https://raw.githubusercontent.com/epfl-si/ansible.suitcase/master/install.sh | \
+            SUITCASE_DIR=$PWD/ansible-deps-cache \
+            SUITCASE_ANSIBLE_VERSION=10.0.1 \
+            bash -x
+    fi
+    . ansible-deps-cache/lib.sh
+    ensure_ansible_runtime
+}
+
+ensure_suitcase
+
+declare -a ansible_args
+inventory_mode="test"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --help)
+      help ;;
+    --prod)
+      inventory_mode="test-and-prod"
+      shift ;;
+    *)
+      ansible_args+=("$1")
+      shift ;;
+  esac
+done
+
+inventories () {
+  case "$inventory_mode" in
+    test)          echo "-i inventory-test.yml" ;;
+    test-and-prod) echo "-i inventory-test.yml -i inventory-prod.yml" ;;
+  esac
+}
+
+ansible-playbook $(inventories) playbook.yml "${ansible_args[@]}"

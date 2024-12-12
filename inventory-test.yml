@@ -1,0 +1,13 @@
+all:
+  children:
+    vms:
+      children:
+        vms_test:
+          hosts:
+            exopgesrv85 #.xaas.epfl.ch: # 128.178.109.22
+            # exopgesrv86 #.xaas.epfl.ch: # 128.178.109.40
+          vars:
+            inventory_environment: test
+            ansible_user: root
+            ansible_python_interpreter: /usr/bin/python3.9
+            vip_address: "128.178.109.64"

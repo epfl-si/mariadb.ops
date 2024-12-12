@@ -1,0 +1,13 @@
+all:
+  children:
+    vms:
+      children:
+        vms_prod:
+          hosts:
+            exopgesrv00.xaas.epfl.ch:
+            exopgesrv00.xaas.epfl.ch:
+          vars:
+            inventory_environment: prod
+            ansible_user: root
+            ansible_python_interpreter: /usr/bin/python3.9
+            vip_address: ""
