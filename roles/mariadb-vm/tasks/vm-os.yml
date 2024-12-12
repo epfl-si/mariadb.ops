@@ -19,6 +19,10 @@
     - vim
     - git
 
+- name: Change hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname | regex_replace('\\..*$', '') }}" 
+
 - name: Deploy the message of the day
   ansible.builtin.template:
     src: motd.txt
@@ -31,3 +35,5 @@
     path: ~/.bashrc
     regexp: '^#force_color_prompt=yes$'
     replace: 'force_color_prompt=yes'
+
+
