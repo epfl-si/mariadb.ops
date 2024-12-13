@@ -23,6 +23,7 @@
       - docker-ce
       - python3-pymysql
       - mariadb-client
+      - vim
     state: latest
     update_cache: true
   become: yes
