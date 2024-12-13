@@ -42,3 +42,13 @@
       - "{{ mariadb_dbdata_basepath }}/{{ item.name }}:/var/lib/mysql"
   tags:
     - mariadb.container
+
+- name: "Upgrade MariaDB {{ item.name }}"
+  community.docker.docker_container_exec:
+    container: "mariadb_{{ item.name }}"
+    command: "mariadb-upgrade --user={{ mariadb_secrets.superuser.user }} --host=127.0.0.1 --port=3306 --verbose --password={{ mariadb_secrets.superuser.password }}"
+  register: _upgrade_result
+  changed_when: >-
+    "MariaDB is already upgraded" not in _upgrade_result.stdout
+  tags:
+    - mariadb.upgrade

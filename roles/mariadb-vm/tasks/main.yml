@@ -55,6 +55,7 @@
     - mariadb.container
     - mariadb.directories
     - mariadb.rsync
+    - mariadb.upgrade
 
 - name: MariaDB administration
   include_tasks:
