@@ -20,3 +20,6 @@ SSH_KEYS:
   - # example of revoked key
     github: crazylady2004
     state: absent
+  -
+    github: saskyapanchaud
+    state: present
