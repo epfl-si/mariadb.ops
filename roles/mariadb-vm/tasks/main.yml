@@ -14,7 +14,6 @@
       tags:
         - vm
         - vm.os
-        - vm.os.upgrade
   tags:
     - vm
     - vm.os
@@ -22,9 +21,16 @@
     - vm.os.upgrade
 
 - name: Install Docker
-  import_tasks:
+  include_tasks:
     file: install-docker.yml
+    apply:
+      tags:
+        - vm
+        - vm.os
+        - vm.os.docker
   tags:
+    - vm
+    - vm.os
     - vm.os.docker
 
 - include_tasks:
@@ -56,4 +62,4 @@
       tags:
         - never
   tags:
-    - mariadb.rsync_check
+    - mariadb.test
