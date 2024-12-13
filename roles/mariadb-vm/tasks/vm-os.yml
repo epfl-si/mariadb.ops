@@ -18,10 +18,11 @@
     - tmux
     - vim
     - git
+    - rsync
 
 - name: Change hostname
   ansible.builtin.hostname:
-    name: "{{ inventory_hostname | regex_replace('\\..*$', '') }}" 
+    name: "{{ inventory_hostname | regex_replace('\\..*$', '') }}"
 
 - name: Deploy the message of the day
   ansible.builtin.template:
