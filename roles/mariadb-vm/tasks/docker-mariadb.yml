@@ -1,6 +1,24 @@
 - tags: always
   include_vars: vars/mariadb-vars.yml
 
+- name: Check if MariaDB initial data folder exists
+  ansible.builtin.stat:
+    path: "{{ mariadb_dbdata_basepath }}/{{ item.name }}/"
+  register: _mariadb_data_dir
+  tags:
+    - mariadb.rsync
+
+- name: Copy init data
+  shell:
+    cmd: "rsync -av root@exopgesrv86:/var/lib/mysql/ {{ mariadb_dbdata_basepath }}/{{ item.name }}/"
+  vars:
+    - ansible_ssh_extra_args: -A
+  when:
+    - not _mariadb_data_dir.stat.exists
+    - item.name == 'primary'
+  tags:
+    - mariadb.rsync
+
 - name: Ensure MariaDB directories
   with_items:
     - '{{ mariadb_binlog_basepath }}/{{ item.name }}'
