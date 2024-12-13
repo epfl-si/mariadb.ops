@@ -1,16 +1,5 @@
 - tags: always
   include_vars: vars/mariadb-vars.yml
 
-- name: Check if MariaDB initial data folder exists
-  ansible.builtin.stat:
-    path: "{{ shared_path }}/init_data/"
-  register: _mariadb_data_dir
-  tags:
-    - mariadb.rsync_check
 
-- name: Fail is folder doesn't exist
-  ansible.builtin.fail:
-    msg: "Please run `rsync -av /var/lib/mysql/ {{ shared_path }}/init_data/` to create the MariaDB folder on the current primary MariaDB"
-  when: not _mariadb_data_dir.stat.exists
-  tags:
-    - mariadb.rsync_check
+
