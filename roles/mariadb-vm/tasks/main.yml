@@ -64,4 +64,4 @@
       tags:
         - never
   tags:
-    - mariadb.test
+    - mariadb.mycnf_file
