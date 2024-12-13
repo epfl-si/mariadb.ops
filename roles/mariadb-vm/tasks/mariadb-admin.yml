@@ -1,5 +1,14 @@
 - tags: always
   include_vars: vars/mariadb-vars.yml
 
-
-
+- name: Create database user for replica
+  when: item.name == 'primary'
+  community.mysql.mysql_user:
+    name: "{{ mariadb_secrets.replicator.user }}"
+    password: "{{ mariadb_secrets.replicator.password }}"
+    priv: '*.*:REPLICATION SLAVE'
+    state: present
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+  tags:
+    - mariadb.replica

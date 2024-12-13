@@ -58,10 +58,11 @@
     - mariadb.upgrade
 
 - name: MariaDB administration
+  with_items: "{{ mariadb_roles }}"
   include_tasks:
     file: mariadb-admin.yml
     apply:
       tags:
         - never
   tags:
-    - mariadb.mycnf_file
+    - mariadb.replica
