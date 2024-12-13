@@ -48,3 +48,13 @@
     - mariadb
     - mariadb.container
     - mariadb.directories
+
+- name: MariaDB administration
+  include_tasks:
+    file: mariadb-admin.yml
+    apply:
+      tags:
+        - never
+  tags:
+    - mariadb.restore
+    - mariadb.superuser

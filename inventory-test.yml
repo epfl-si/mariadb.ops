@@ -11,7 +11,8 @@ all:
     #   ansible_user: root
   vars:
     inventory_environment: test
+    shared_path: '/var/lib/mysql-repl'
     nfs_shares: 
       - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
-        mount: '/var/lib/mysql-repl'
+        mount: "{{ shared_path }}"
     vip_address: "128.178.109.64"

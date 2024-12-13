@@ -1,0 +1,23 @@
+- tags: always
+  include_vars: vars/mariadb-vars.yml
+
+- name: Create database user with all database privileges
+  community.mysql.mysql_user:
+    name: "{{ mariadb_secrets.superuser.user }}"
+    password: "{{ mariadb_secrets.superuser.password }}"
+    priv: '*.*:ALL,GRANT,CREATE'
+    state: present
+    login_user: "root"
+    login_password: "{{ mariadb_secrets.root_password }}"
+  tags:
+    - mariadb.superuser
+
+- name: Restore database
+  community.mysql.mysql_db:
+    name: all
+    state: import
+    target: "{{ shared_path }}/dump_sql/dump.sql"
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+  tags:
+    - mariadb.restore

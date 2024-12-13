@@ -21,6 +21,8 @@
       - virtualenv
       - python3-setuptools
       - docker-ce
+      - python3-pymysql
+      - mariadb-client
     state: latest
     update_cache: true
   become: yes
