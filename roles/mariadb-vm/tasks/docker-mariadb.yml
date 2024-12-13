@@ -23,6 +23,7 @@
   with_items:
     - '{{ mariadb_binlog_basepath }}/{{ item.name }}'
     - '{{ mariadb_dbdata_basepath }}/{{ item.name }}'
+    - '{{ mariadb_dbconfig_basepath }}'
   ansible.builtin.file:
     state: directory
     path: '{{ item }}'
