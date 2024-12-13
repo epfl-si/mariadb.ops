@@ -3,16 +3,16 @@ all:
     exopgesrv85.epfl.ch:
       ansible_user: root
       mariadb_roles:
-        - name: master
+        - name: primary
           port: 3306
-        - name: slave
+        - name: replica
           port: 3307
     # exopgesrv86.epfl.ch:
     #   ansible_user: root
   vars:
     inventory_environment: test
     shared_path: '/var/lib/mysql-repl'
-    nfs_shares: 
+    nfs_shares:
       - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
         mount: "{{ shared_path }}"
     vip_address: "128.178.109.64"
