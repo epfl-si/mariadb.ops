@@ -4,8 +4,10 @@ all:
       ansible_user: root
       mariadb_roles:
         - name: primary
+          server_id: 1
           port: 3306
         - name: replica
+          server_id: 2
           port: 3307
     # exopgesrv86.epfl.ch:
     #   ansible_user: root

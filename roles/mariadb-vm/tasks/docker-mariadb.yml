@@ -29,6 +29,13 @@
   tags:
     - mariadb.directories
 
+- name: Create my.cnf file
+  ansible.builtin.template:
+    src: my.cnf
+    dest: "{{ mariadb_dbconfig_basepath }}/my_{{ item.name }}.cnf"
+  tags:
+    - mariadb.container
+
 - name: Ensure MariaDB container
   community.general.docker_container:
     name: 'mariadb_{{ item.name }}'
@@ -40,6 +47,7 @@
       - "{{ item.port }}:3306"
     volumes:
       - "{{ mariadb_dbdata_basepath }}/{{ item.name }}:/var/lib/mysql"
+      - "{{ mariadb_dbconfig_basepath }}/my_{{ item.name }}.cnf:/etc/mysql/mariadb.conf.d/my.cnf"
   tags:
     - mariadb.container
 

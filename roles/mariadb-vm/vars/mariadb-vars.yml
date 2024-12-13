@@ -1,8 +1,9 @@
 mariadb_version: 11.4
-# old_mariadb_version: 5.5 
+# old_mariadb_version: 5.5
 
 mariadb_binlog_basepath: '/srv/mariadb/binlogs'
 mariadb_dbdata_basepath: '/srv/mariadb/data'
+mariadb_dbconfig_basepath: '/srv/mariadb/config'
 
 _keybase: "{{ KEYBASE | default('/keybase/team/epfl_wp_' + inventory_environment) }}"
 _secrets_file: "{{ _keybase }}/{{ SECRETS_FILE | default('secrets-mariadb.yml') }}"
