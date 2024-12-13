@@ -1,5 +1,13 @@
 - name: "MariaDB VM + service"
-  hosts: vms
+  hosts: vms_test_master
+    # - vms_test_slave
   gather_facts: no
   roles:
-  - role: roles/mariadb-vm
+    - role: roles/mariadb-vm
+
+
+- name: "MariaDB VM + service"
+  hosts: vms_test_slave
+  gather_facts: no
+  roles:
+    - role: roles/mariadb-vm

@@ -1,10 +1,24 @@
 - tags: always
   include_vars: vars/mariadb-vars.yml
 
+- name: Ensure MariaDB directories
+  with_items:
+    - "{{ mariadb_dbdata_path }}"
+    - "{{ mariadb_binlog_path }}"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"
+
 - name: Ensure MariaDB container
-  docker_container:
-    name: mariadb
+  community.general.docker_container:
+    name: 'mariadb_{{ mariadb_role }}'
     state: started
     image: "mariadb:{{ mariadb_version }}"
+    env:
+      MARIADB_ROOT_PASSWORD: "{{ mariadb_secrets.root_password }}"
+    ports:
+      - "{{ mariadb_port }}:3306"
+    volumes:
+      - "{{ mariadb_dbdata_path }}:/var/lib/mysql"
   tags:
     - mariadb

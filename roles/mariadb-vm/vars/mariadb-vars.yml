@@ -1,8 +1,11 @@
-mariadb_major_version: 11
-__mariadb_minor_version: 4
-mariadb_version: "{{ mariadb_major_version }}.{{ __mariadb_minor_version }}" 
-# Or use "mariadb_version: lts". See https://hub.docker.com/_/mariadb
+mariadb_version: 11.4
+# old_mariadb_version: 5.5 
 
-mariadb_port: 3306
-mariadb_storage_path: /srv/mariadb/data
-mariadb_backup_path: /srv/mariadb/backup
+mariadb_binlog_basepath: '/srv/mariadb/binlogs'
+mariadb_dbdata_basepath: '/srv/mariadb/data'
+mariadb_binlog_path: '{{ mariadb_binlog_basepath }}/{{ mariadb_role }}'
+mariadb_dbdata_path: '{{ mariadb_dbdata_basepath }}/{{ mariadb_role }}'
+
+_keybase: "{{ KEYBASE | default('/keybase/team/epfl_wp_' + inventory_environment) }}"
+_secrets_file: "{{ _keybase }}/{{ SECRETS_FILE | default('secrets-mariadb.yml') }}"
+mariadb_secrets: "{{ lookup('file', _secrets_file) | from_yaml }}"

@@ -1,17 +1,28 @@
 all:
-  children:
-    vms:
-      children:
-        vms_test:
-          hosts:
-            exopgesrv85.epfl.ch
-            # exopgesrv86 #.xaas.epfl.ch: # 128.178.109.40
-          vars:
-            inventory_environment: test
-            ansible_user: root
-            # ansible_python_interpreter: /usr/bin/python3.9
-            vip_address: "128.178.109.64"
-            nfs_shares: 
-              - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
-                mount: '/var/lib/mysql-repl'
+  hosts:
+    exopgesrv85.epfl.ch:
+      ansible_user: root
+    # exopgesrv86.epfl.ch:
+    #   ansible_user: root
+  vars:
+    inventory_environment: test
+    nfs_shares: 
+      - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
+        mount: '/var/lib/mysql-repl'
+    vip_address: "128.178.109.64"
+
+vms_test_master:
+  hosts:
+    exopgesrv85.epfl.ch:
+
+  vars:
+    mariadb_role: master
+    mariadb_port: 3306
+vms_test_slave:
+  hosts:
+    exopgesrv85.epfl.ch:
+
+  vars:
+    mariadb_role: slave
+    mariadb_port: 3307
 
