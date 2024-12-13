@@ -56,5 +56,4 @@
       tags:
         - never
   tags:
-    - mariadb.restore
-    - mariadb.superuser
+    - mariadb.rsync_check

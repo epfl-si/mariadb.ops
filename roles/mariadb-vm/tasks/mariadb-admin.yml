@@ -1,23 +1,16 @@
 - tags: always
   include_vars: vars/mariadb-vars.yml
 
-- name: Create database user with all database privileges
-  community.mysql.mysql_user:
-    name: "{{ mariadb_secrets.superuser.user }}"
-    password: "{{ mariadb_secrets.superuser.password }}"
-    priv: '*.*:ALL,GRANT,CREATE'
-    state: present
-    login_user: "root"
-    login_password: "{{ mariadb_secrets.root_password }}"
+- name: Check if MariaDB initial data folder exists
+  ansible.builtin.stat:
+    path: "{{ shared_path }}/init_data/"
+  register: _mariadb_data_dir
   tags:
-    - mariadb.superuser
+    - mariadb.rsync_check
 
-- name: Restore database
-  community.mysql.mysql_db:
-    name: all
-    state: import
-    target: "{{ shared_path }}/dump_sql/dump.sql"
-    login_user: "{{ mariadb_secrets.superuser.user }}"
-    login_password: "{{ mariadb_secrets.superuser.password }}"
+- name: Fail is folder doesn't exist
+  ansible.builtin.fail:
+    msg: "Please run `rsync -av /var/lib/mysql/ {{ shared_path }}/init_data/` to create the MariaDB folder on the current primary MariaDB"
+  when: not _mariadb_data_dir.stat.exists
   tags:
-    - mariadb.restore
+    - mariadb.rsync_check
