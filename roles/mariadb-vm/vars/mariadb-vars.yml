@@ -3,8 +3,6 @@ mariadb_version: 11.4
 
 mariadb_binlog_basepath: '/srv/mariadb/binlogs'
 mariadb_dbdata_basepath: '/srv/mariadb/data'
-mariadb_binlog_path: '{{ mariadb_binlog_basepath }}/{{ mariadb_role }}'
-mariadb_dbdata_path: '{{ mariadb_dbdata_basepath }}/{{ mariadb_role }}'
 
 _keybase: "{{ KEYBASE | default('/keybase/team/epfl_wp_' + inventory_environment) }}"
 _secrets_file: "{{ _keybase }}/{{ SECRETS_FILE | default('secrets-mariadb.yml') }}"

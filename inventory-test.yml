@@ -2,6 +2,11 @@ all:
   hosts:
     exopgesrv85.epfl.ch:
       ansible_user: root
+      mariadb_roles:
+        - name: master
+          port: 3306
+        - name: slave
+          port: 3307
     # exopgesrv86.epfl.ch:
     #   ansible_user: root
   vars:
@@ -10,19 +15,3 @@ all:
       - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
         mount: '/var/lib/mysql-repl'
     vip_address: "128.178.109.64"
-
-vms_test_master:
-  hosts:
-    exopgesrv85.epfl.ch:
-
-  vars:
-    mariadb_role: master
-    mariadb_port: 3306
-vms_test_slave:
-  hosts:
-    exopgesrv85.epfl.ch:
-
-  vars:
-    mariadb_role: slave
-    mariadb_port: 3307
-

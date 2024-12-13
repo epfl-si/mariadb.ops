@@ -38,7 +38,13 @@
     - vm.volumes
 
 - name: MariaDB
-  import_tasks:
+  with_items: "{{ mariadb_roles }}"
+  include_tasks:
     file: docker-mariadb.yml
+    apply:
+      tags:
+        - mariadb
   tags:
     - mariadb
+    - mariadb.container
+    - mariadb.directories
