@@ -6,6 +6,7 @@ mariadb_dbdata_basepath: '/srv/mariadb/data'
 mariadb_dbconfig_basepath: '/srv/mariadb/config'
 mariadb_dbbackup_basepath: '{{ shared_path }}/backup'
 mariadb_dbdata_basepath_volume: '/var/lib/mysql/'
+mariadb_dbbackup_basepath_volume: '/var/lib/mysql-backup/'
 mariadb_binlog_basepath_volume: '/var/lib/mysql-binlog'
 
 _keybase: "{{ KEYBASE | default('/keybase/team/epfl_wp_' + inventory_environment) }}"

@@ -60,6 +60,7 @@
       - "{{ mariadb_dbdata_basepath }}/{{ item.folder_name }}:{{ mariadb_dbdata_basepath_volume }}"
       - "{{ mariadb_binlog_basepath }}/{{ item.folder_name }}:{{ mariadb_binlog_basepath_volume }}"
       - "{{ mariadb_dbconfig_basepath }}/{{ item.mycnf_name }}:/etc/mysql/mariadb.conf.d/my.cnf"
+      - "{{ mariadb_dbbackup_basepath }}/{{ item.mycnf_name }}:{{ mariadb_dbbackup_basepath_volume }}"
   tags:
     - mariadb.container
 

@@ -12,3 +12,12 @@
     login_password: "{{ mariadb_secrets.superuser.password }}"
   tags:
     - mariadb.replica
+
+- name: "Run Backup on {{ item.name }}"
+  when: item.name == 'primary'
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "mariabackup --backup --target-dir={{ mariadb_dbbackup_basepath_volume }} --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }}"
+  register: _upgrade_result
+  tags:
+    - mariadb.replica
