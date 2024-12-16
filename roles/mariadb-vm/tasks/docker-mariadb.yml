@@ -3,14 +3,14 @@
 
 - name: Check if MariaDB initial data folder exists
   ansible.builtin.stat:
-    path: "{{ mariadb_dbdata_basepath }}/{{ item.name }}/"
+    path: "{{ mariadb_dbdata_basepath }}/{{ item.folder_name }}/"
   register: _mariadb_data_dir
   tags:
     - mariadb.rsync
 
 - name: Copy init data
   shell:
-    cmd: "rsync -av root@exopgesrv86:/var/lib/mysql/ {{ mariadb_dbdata_basepath }}/{{ item.name }}/"
+    cmd: "rsync -av {{ item.old_data_source }} {{ mariadb_dbdata_basepath }}/{{ item.folder_name }}/"
   vars:
     - ansible_ssh_extra_args: -A
   when:
@@ -19,11 +19,13 @@
   tags:
     - mariadb.rsync
 
+# Create the {{ mariadb_dbdata_basepath }}/{{ item.folder_name }} for replica container too
 - name: Ensure MariaDB directories
   with_items:
-    - '{{ mariadb_binlog_basepath }}/{{ item.name }}'
-    - '{{ mariadb_dbdata_basepath }}/{{ item.name }}'
+    - '{{ mariadb_binlog_basepath }}/{{ item.folder_name }}'
+    - '{{ mariadb_dbdata_basepath }}/{{ item.folder_name }}'
     - '{{ mariadb_dbconfig_basepath }}'
+    - '{{ mariadb_dbbackup_basepath }}/{{ item.folder_name }}'
   ansible.builtin.file:
     state: directory
     path: '{{ item }}'
@@ -33,13 +35,13 @@
 - name: Create my.cnf file
   ansible.builtin.template:
     src: my.cnf
-    dest: "{{ mariadb_dbconfig_basepath }}/my_{{ item.name }}.cnf"
+    dest: "{{ mariadb_dbconfig_basepath }}/{{ item.mycnf_name }}"
   tags:
     - mariadb.container
 
 - name: Ensure MariaDB container
   community.general.docker_container:
-    name: 'mariadb_{{ item.name }}'
+    name: '{{ item.container_name }}'
     state: started
     image: "mariadb:{{ mariadb_version }}"
     env:
@@ -47,17 +49,20 @@
     ports:
       - "{{ item.port }}:3306"
     volumes:
-      - "{{ mariadb_dbdata_basepath }}/{{ item.name }}:/var/lib/mysql"
-      - "{{ mariadb_dbconfig_basepath }}/my_{{ item.name }}.cnf:/etc/mysql/mariadb.conf.d/my.cnf"
+      - "{{ mariadb_dbdata_basepath }}/{{ item.folder_name }}:{{ mariadb_dbdata_basepath_volume }}"
+      - "{{ mariadb_binlog_basepath }}/{{ item.folder_name }}:{{ mariadb_binlog_basepath_volume }}"
+      - "{{ mariadb_dbconfig_basepath }}/{{ item.mycnf_name }}:/etc/mysql/mariadb.conf.d/my.cnf"
   tags:
     - mariadb.container
 
 - name: "Upgrade MariaDB {{ item.name }}"
   community.docker.docker_container_exec:
-    container: "mariadb_{{ item.name }}"
+    container: "{{ item.container_name }}"
     command: "mariadb-upgrade --user={{ mariadb_secrets.superuser.user }} --host=127.0.0.1 --port=3306 --verbose --password={{ mariadb_secrets.superuser.password }}"
   register: _upgrade_result
   changed_when: >-
     "MariaDB is already upgraded" not in _upgrade_result.stdout
+  when:
+    - item.name == 'primary'
   tags:
     - mariadb.upgrade

@@ -6,14 +6,21 @@ all:
         - name: primary
           server_id: 1
           port: 3306
+          folder_name: exopgesrv85_primary
+          container_name: mariadb_primary
+          mycnf_name: my_primary.cnf
+          old_data_source: root@exopgesrv86:/var/lib/mysql/
         - name: replica
           server_id: 2
           port: 3307
+          folder_name: exopgesrv85_replica
+          container_name: mariadb_replica
+          mycnf_name: my_replica.cnf
     # exopgesrv86.epfl.ch:
     #   ansible_user: root
   vars:
     inventory_environment: test
-    shared_path: '/var/lib/mysql-repl'
+    shared_path: '/mnt/mariadb_shared'
     nfs_shares:
       - src: 'nas-app-ma-nfs1:si_test_mysql_wp_binlogs_app'
         mount: "{{ shared_path }}"
