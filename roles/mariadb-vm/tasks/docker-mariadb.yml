@@ -8,6 +8,14 @@
   tags:
     - mariadb.rsync
 
+- name: Stop Varnish
+  when: item.name == 'primary'
+  ansible.builtin.pause:
+    prompt: "Please stop wp-admin from Varnish"
+  tags:
+    - mariadb.rsync
+
+# MariaDB 10.4 can't import database dump created before 10.4: https://jira.mariadb.org/browse/MDEV-22127
 - name: Copy init data
   shell:
     cmd: "rsync -av {{ item.old_data_source }} {{ mariadb_dbdata_basepath }}/{{ item.folder_name }}/"
