@@ -16,6 +16,7 @@
   with_items:
     - "{{ mariadb_data_path }}"
     - "{{ mariadb_cnf_path | dirname }}"
+    - "{{ output_backup_dir }}"
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -48,11 +49,6 @@
 #       tags:
 #         - mariadb.initialize
 # Not very DRY but I need an extra volume
-- name: Create my.cnf file
-  ansible.builtin.template:
-    src: my.cnf
-    dest: "{{ mariadb_cnf_path }}"
-
 - name: Ensure MariaDB container
   community.general.docker_container:
     name: '{{ container_name }}'
@@ -63,9 +59,7 @@
     ports:
       - "{{ mariadb_port }}:3306"
     volumes:
-      # - "{{ mariadb_cnf_path }}:/etc/mysql/mariadb.conf.d/my.cnf"
       - "{{ mariadb_data_path }}:/var/lib/mysql"
-      - "{{ mariadb_binlog_path }}:/var/lib/mysql-binlog"
       - "{{ output_backup_dir }}:/var/mariadb/backup"
 
 - name: Make sure the DB have started
@@ -79,6 +73,16 @@
   register: _upgrade_result
   changed_when: >-
     "MariaDB is already upgraded" not in _upgrade_result.stdout
+
+- name: Create database user for replica
+  community.mysql.mysql_user:
+    name: "{{ mariadb_secrets.replicator.user }}"
+    password: "{{ mariadb_secrets.replicator.password }}"
+    host: "%"
+    priv: '*.*:REPLICATION SLAVE'
+    state: present
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
 
 - name: "Backup primary to transfer backup directory"
   community.docker.docker_container_exec:
@@ -94,3 +98,39 @@
 - name: backup output
   ansible.builtin.debug:
     var: _backup_result
+
+- name: MariaDB_run
+  include_tasks:
+    file: run.yml
+    apply:
+      tags:
+        - mariadb.initialize
+
+- name: Make sure the DB have restarted
+  ansible.builtin.pause:
+    prompt: "Please Make sure the DB have restarted. Then press enter"
+
+- name: "Retrive current binlog position"
+  community.mysql.mysql_query:
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: SHOW MASTER STATUS
+  register: _binlog_position
+  tags:
+    - mariadb.binlogpos
+
+- name: "Save binlog position into file in shared path"
+  ansible.builtin.copy:
+    dest: "{{ binlog_position_path }}"
+    content: "{{ _binlog_position }}" 
+  tags:
+    - mariadb.binlogpos
+
+# Now it is time to switch the virtual IP:
+# On the old primary (futur replica) server:
+# ip ad del 128.178.109.64/24 dev ens192
+# On the new primary server:
+# ip addr add 128.178.109.64/24 dev ens192 && arping -U 128.178.109.64
+# The re-enable writing mode on wordpress

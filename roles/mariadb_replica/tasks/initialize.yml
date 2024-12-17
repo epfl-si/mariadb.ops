@@ -35,3 +35,59 @@
 - name: backup output
   ansible.builtin.debug:
     var: _restore_result
+
+- name: MariaDB_run
+  include_tasks:
+    file: run.yml
+    apply:
+      tags:
+        - mariadb.initialize
+
+- name: "Make sure the DB have started"
+  ansible.builtin.pause:
+    prompt: "Please Make sure the DB have started. Then press enter"
+
+- name: "Read binlog position"
+  ansible.builtin.slurp:
+    src: "{{ binlog_position_path }}"
+  register: _binlog_position
+
+- name: "Interprete binlog_position"
+  ansible.builtin.set_fact:
+    _binlog_raw: "{{ _binlog_position.content | b64decode | from_json }}" 
+
+- name: "Extract interesting part from binlog_position output"
+  ansible.builtin.set_fact:
+    _binlog: "{{ _binlog_raw['query_result'][0][0] }}" 
+
+- name: "Configure replication"
+  community.mysql.mysql_query:
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: >
+      CHANGE MASTER TO
+      MASTER_HOST='{{ primary_hostname }}',
+      MASTER_USER='{{ mariadb_secrets.replicator.user }}',
+      MASTER_PASSWORD='{{ mariadb_secrets.replicator.password }}',
+      MASTER_PORT={{ primary_port }},
+      MASTER_LOG_FILE='{{ _binlog.File }}',
+      MASTER_LOG_POS={{ _binlog.Position }},
+      MASTER_CONNECT_RETRY=10;
+
+- name: "Ensure GTID is enabled"
+  community.mysql.mysql_query:
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: CHANGE MASTER TO MASTER_USE_GTID = slave_pos
+
+- name: "Start replicating"
+  community.mysql.mysql_query:
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: "START SLAVE"

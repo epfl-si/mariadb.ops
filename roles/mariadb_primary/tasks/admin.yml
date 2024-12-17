@@ -9,3 +9,17 @@
     "MariaDB is already upgraded" not in _upgrade_result.stdout
   tags:
     - mariadb.upgrade
+
+
+
+- name: Create database user for replica
+  community.mysql.mysql_user:
+    name: "{{ mariadb_secrets.replicator.user }}"
+    password: "{{ mariadb_secrets.replicator.password }}"
+    host: "%"
+    priv: '*.*:REPLICATION SLAVE'
+    state: present
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+  tags:
+    - mariadb.fixreplicator

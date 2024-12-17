@@ -32,3 +32,5 @@
         - never
   tags:
     - mariadb.upgrade
+    - mariadb.binlogpos
+    - mariadb.fixreplicator

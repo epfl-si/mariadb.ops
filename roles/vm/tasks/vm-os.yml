@@ -4,8 +4,9 @@
   ansible.builtin.apt:
     name: "*"
     state: latest
-  when: >- 
-    "vm.os.upgrade" in ansible_run_tags
+  tags:
+    - never
+    - vm.os.upgrade
 
 - name: Convenient packages
   ansible.builtin.apt:
@@ -22,7 +23,7 @@
 
 - name: Change hostname
   ansible.builtin.hostname:
-    name: "{{ inventory_hostname | regex_replace('\\..*$', '') }}"
+    name: "{{ host_basename }}"
 
 - name: Deploy the message of the day
   ansible.builtin.template:

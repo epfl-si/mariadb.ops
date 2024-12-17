@@ -23,3 +23,14 @@
   tags:
     - mariadb
     - mariadb.run
+
+- name: MariaDB Administrative tasks
+  include_tasks:
+    file: admin.yml
+    apply:
+      tags:
+        - never
+  tags:
+    - mariadb.upgrade
+    - mariadb.binlogpos
+
