@@ -13,6 +13,9 @@
     name: "{{ item }}"
     state: present
   with_items:
+    - arping
+    - dsniff
+    - net-tools
     - nmap
     - nfs-common
     - telnet

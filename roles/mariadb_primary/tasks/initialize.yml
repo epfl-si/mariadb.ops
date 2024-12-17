@@ -132,5 +132,5 @@
 # On the old primary (futur replica) server:
 # ip ad del 128.178.109.64/24 dev ens192
 # On the new primary server:
-# ip addr add 128.178.109.64/24 dev ens192 && arping -U 128.178.109.64
+# ip addr add 128.178.109.64/24 dev ens192 && arpspoof -i ens192 -t 128.178.109.1 128.178.109.64
 # The re-enable writing mode on wordpress
