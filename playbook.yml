@@ -1,6 +1,24 @@
-- name: "MariaDB VM + service"
-  hosts: exopgesrv85.epfl.ch
-    # - vms_test_slave
+- name: "VM with Docker for MariaDB"
+  hosts: all
+  roles:
+    - role: roles/vm
+
+# To initialize from scratch:
+# ./mariasible -t mariadb.initialize --limit 'mariadb_primaries'
+# or
+# ./mariasible -t mariadb.initialize.primary
+- name: "MariaDB primary server role"
+  hosts: mariadb_primaries
   gather_facts: no
   roles:
-    - role: roles/mariadb-vm
+    - role: roles/mariadb_primary
+
+# To initialize from scratch:
+# ./mariasible -t mariadb.initialize --limit 'mariadb_replicas'
+# or
+# ./mariasible -t mariadb.initialize.replica
+- name: "MariaDB replica server role"
+  hosts: mariadb_replicas
+  gather_facts: no
+  roles:
+    - role: roles/mariadb_replica

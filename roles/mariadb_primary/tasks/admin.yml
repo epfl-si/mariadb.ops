@@ -1,0 +1,11 @@
+---
+
+- name: "Upgrade primary"
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "mariadb-upgrade --user={{ mariadb_secrets.superuser.user }} --host=127.0.0.1 --port=3306 --verbose --password={{ mariadb_secrets.superuser.password }}"
+  register: _upgrade_result
+  changed_when: >-
+    "MariaDB is already upgraded" not in _upgrade_result.stdout
+  tags:
+    - mariadb.upgrade

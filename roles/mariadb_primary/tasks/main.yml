@@ -1,0 +1,34 @@
+---
+- tags: always
+  include_vars: vars/mariadb-vars.yml
+
+# the very first time ansible is executed (or at least untill the DBs are ok), 
+# it needs to be with -t mariadb -t mariadb.initialize
+- name: MariaDB_init
+  include_tasks:
+    file: initialize.yml
+    apply:
+      tags:
+        - never
+        - mariadb.initialize
+        - mariadb.initialize.primary
+  tags:
+    - mariadb
+    - mariadb.initialize
+    - mariadb.initialize.primary
+
+- name: MariaDB_run
+  import_tasks:
+    file: run.yml
+  tags:
+    - mariadb
+    - mariadb.run
+
+- name: MariaDB Administrative tasks
+  include_tasks:
+    file: admin.yml
+    apply:
+      tags:
+        - never
+  tags:
+    - mariadb.upgrade

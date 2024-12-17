@@ -1,0 +1,37 @@
+---
+# # This set of tasks will run only an a pristine server: no data should be present
+
+# # TODO: add task with tag "nuke" to restart from scrach deleting all the data
+
+- name: Check if MariaDB initial data folder exists
+  ansible.builtin.stat:
+    path: "{{ mariadb_data_path }}"
+  register: _mariadb_data_dir
+
+- fail:
+    msg: The MariaDB data directory is already present. Aborting."
+  when: _mariadb_data_dir.stat.exists
+
+- name: Ensure mandatory directories
+  with_items:
+    - "{{ mariadb_data_path }}"
+    - "{{ mariadb_cnf_path | dirname }}"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+
+- name: "Restore primary backup data into the replica"
+  community.docker.docker_container:
+    image: "mariadb:{{ mariadb_version }}"
+    name: "{{ container_name }}_initial"
+    auto_remove: true
+    volumes:
+      - "{{ mariadb_data_path }}:/var/lib/mysql"
+      - "{{ input_backup_dir }}:/var/mariadb/backup"
+    entrypoint: "/bin/bash"
+    command: -c "mariabackup --move-back --target-dir=/var/mariadb/backup"
+  register: _restore_result
+
+- name: backup output
+  ansible.builtin.debug:
+    var: _restore_result

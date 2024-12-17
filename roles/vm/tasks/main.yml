@@ -1,0 +1,31 @@
+- import_tasks:
+    file: vm-access.yml
+  tags:
+    - vm
+    - vm.access
+
+- include_tasks:
+    file: vm-os.yml
+    apply:
+      tags:
+        - vm
+        - vm.os
+  tags:
+    - vm
+    - vm.os
+    - vm.motd
+    - vm.os.upgrade
+
+- name: Install Docker
+  import_tasks:
+    file: vm-docker.yml
+  tags:
+    - vm
+    - vm.os
+    - vm.os.docker
+
+- import_tasks:
+    file: vm-volumes.yml
+  tags:
+    - vm
+    - vm.volumes

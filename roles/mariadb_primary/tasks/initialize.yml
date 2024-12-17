@@ -1,0 +1,96 @@
+---
+# # This set of tasks will run only an a pristine server: no data should be present
+
+# # TODO: add task with tag "nuke" to restart from scrach deleting all the data
+
+- name: Check if MariaDB initial data folder exists
+  ansible.builtin.stat:
+    path: "{{ mariadb_data_path }}"
+  register: _mariadb_data_dir
+
+- fail:
+    msg: The MariaDB data directory is already present. Aborting."
+  when: _mariadb_data_dir.stat.exists
+
+- name: Ensure mandatory directories
+  with_items:
+    - "{{ mariadb_data_path }}"
+    - "{{ mariadb_cnf_path | dirname }}"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+
+# MariaDB 10.4 can't import database dump created before 10.4: https://jira.mariadb.org/browse/MDEV-22127
+- name: Prefetch remote original data
+  shell:
+    cmd: "rsync -av {{ old_data_source }}/ {{ mariadb_data_path }}/"
+  vars:
+    ansible_ssh_extra_args: -A
+  # when:
+  #   - not _mariadb_data_dir.stat.exists
+
+- name: Stop writes into the original DB (Varnish tricks...)
+  ansible.builtin.pause:
+    prompt: "Please stop wp-admin from Varnish"
+
+- name: One more quick sync of remote original data
+  shell:
+    cmd: "rsync -av {{ old_data_source }}/ {{ mariadb_data_path }}/"
+  vars:
+    ansible_ssh_extra_args: -A
+  # when:
+  #   - not _mariadb_data_dir.stat.exists
+
+# - name: MariaDB_run
+#   include_tasks:
+#     file: run.yml
+#     apply:
+#       tags:
+#         - mariadb.initialize
+# Not very DRY but I need an extra volume
+- name: Create my.cnf file
+  ansible.builtin.template:
+    src: my.cnf
+    dest: "{{ mariadb_cnf_path }}"
+
+- name: Ensure MariaDB container
+  community.general.docker_container:
+    name: '{{ container_name }}'
+    state: started
+    image: "mariadb:{{ mariadb_version }}"
+    env:
+      MARIADB_ROOT_PASSWORD: "{{ mariadb_secrets.root_password }}"
+    ports:
+      - "{{ mariadb_port }}:3306"
+    volumes:
+      # - "{{ mariadb_cnf_path }}:/etc/mysql/mariadb.conf.d/my.cnf"
+      - "{{ mariadb_data_path }}:/var/lib/mysql"
+      - "{{ mariadb_binlog_path }}:/var/lib/mysql-binlog"
+      - "{{ output_backup_dir }}:/var/mariadb/backup"
+
+- name: Make sure the DB have started
+  ansible.builtin.pause:
+    prompt: "Please Make sure the DB have started. Then press enter"
+
+- name: "Upgrade primary"
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "mariadb-upgrade --user={{ mariadb_secrets.superuser.user }} --host=127.0.0.1 --port=3306 --verbose --password={{ mariadb_secrets.superuser.password }}"
+  register: _upgrade_result
+  changed_when: >-
+    "MariaDB is already upgraded" not in _upgrade_result.stdout
+
+- name: "Backup primary to transfer backup directory"
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "{{ item }}"
+  with_items:
+    - "rm -rf /var/mariadb/backup/*"
+    - "/usr/bin/mariabackup --backup --target-dir=/var/mariadb/backup --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }}"
+    - "/usr/bin/mariabackup --prepare --target-dir=/var/mariadb/backup"
+    # TODO: both commands output "completed OK!" if correctly finished
+  register: _backup_result
+
+- name: backup output
+  ansible.builtin.debug:
+    var: _backup_result
