@@ -10,6 +10,7 @@
     name: '{{ container_name }}'
     state: started
     image: "mariadb:{{ mariadb_version }}"
+    restart_policy: "unless-stopped"
     env:
       MARIADB_ROOT_PASSWORD: "{{ mariadb_secrets.root_password }}"
     ports:
