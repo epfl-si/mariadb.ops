@@ -60,7 +60,7 @@
       - "{{ mariadb_port }}:3306"
     volumes:
       - "{{ mariadb_data_path }}:/var/lib/mysql"
-      - "{{ output_backup_dir }}:/var/mariadb/backup"
+      - "{{ output_backup_dir }}:/var/mariadb_backup"
 
 - name: Make sure the DB have started
   ansible.builtin.pause:
@@ -83,21 +83,6 @@
     state: present
     login_user: "{{ mariadb_secrets.superuser.user }}"
     login_password: "{{ mariadb_secrets.superuser.password }}"
-
-- name: "Backup primary to transfer backup directory"
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: "{{ item }}"
-  with_items:
-    - "rm -rf /var/mariadb/backup/*"
-    - "/usr/bin/mariabackup --backup --target-dir=/var/mariadb/backup --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }}"
-    - "/usr/bin/mariabackup --prepare --target-dir=/var/mariadb/backup"
-    # TODO: both commands output "completed OK!" if correctly finished
-  register: _backup_result
-
-- name: backup output
-  ansible.builtin.debug:
-    var: _backup_result
 
 - name: MariaDB_run
   include_tasks:
@@ -127,6 +112,26 @@
     content: "{{ _binlog_position }}" 
   tags:
     - mariadb.binlogpos
+
+- name: Make sure the DB have restarted
+  ansible.builtin.pause:
+    prompt: "Changed vip to {{ ansible_host }} and Start  wp-admin from Varnish "
+
+- name: "Backup primary to transfer backup directory"
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "{{ item }}"
+  with_items:
+    - "rm -rf /var/mariadb_backup/*"
+    - "/usr/bin/mariadb-backup --backup --target-dir=/var/mariadb_backup --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }}"
+    - "/usr/bin/mariadb-backup --prepare --target-dir=/var/mariadb_backup"
+    # TODO: both commands output "completed OK!" if correctly finished
+  register: _backup_result
+
+- name: backup output
+  ansible.builtin.debug:
+    var: _backup_result
+
 
 # Now it is time to switch the virtual IP:
 # On the old primary (futur replica) server:

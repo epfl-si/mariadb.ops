@@ -27,9 +27,9 @@
     auto_remove: true
     volumes:
       - "{{ mariadb_data_path }}:/var/lib/mysql"
-      - "{{ input_backup_dir }}:/var/mariadb/backup"
+      - "{{ input_backup_dir }}:/var/mariadb_backup"
     entrypoint: "/bin/bash"
-    command: -c "mariabackup --move-back --target-dir=/var/mariadb/backup"
+    command: -c "mariadb-backup --move-back --target-dir=/var/mariadb_backup"
   register: _restore_result
 
 - name: backup output
