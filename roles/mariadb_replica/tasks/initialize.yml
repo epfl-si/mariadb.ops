@@ -36,6 +36,10 @@
   ansible.builtin.debug:
     var: _restore_result
 
+- name: "Make sure the DB have started"
+  ansible.builtin.pause:
+    prompt: "Wait few seconds and then press Enter to allowPlease Make sure the DB have started. Then press enter"
+
 - name: MariaDB_run
   include_tasks:
     file: run.yml
