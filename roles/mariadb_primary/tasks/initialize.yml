@@ -83,16 +83,18 @@
   tags:
     - mariadb.binlogpos
 
+
+- name: Make sure the DB have restarted
+  ansible.builtin.pause:
+    prompt: "Changed vip to {{ ansible_host }} and Start  wp-admin from Varnish "
+
+
 - name: "Save binlog position into file in shared path"
   ansible.builtin.copy:
     dest: "{{ binlog_position_path }}"
     content: "{{ _binlog_position }}" 
   tags:
     - mariadb.binlogpos
-
-- name: Make sure the DB have restarted
-  ansible.builtin.pause:
-    prompt: "Changed vip to {{ ansible_host }} and Start  wp-admin from Varnish "
 
 - name: "Backup primary to transfer backup directory"
   community.docker.docker_container_exec:
