@@ -17,6 +17,7 @@
     volumes:
       - "{{ mariadb_cnf_path }}:/etc/mysql/mariadb.conf.d/my.cnf"
       - "{{ mariadb_data_path }}:/var/lib/mysql"
+      - "{{ output_backup_dir }}:/var/mariadb_backup"
   tags:
     - mariadb.container
 

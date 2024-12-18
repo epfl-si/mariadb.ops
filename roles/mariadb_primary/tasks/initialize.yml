@@ -42,29 +42,16 @@
   # when:
   #   - not _mariadb_data_dir.stat.exists
 
-# - name: MariaDB_run
-#   include_tasks:
-#     file: run.yml
-#     apply:
-#       tags:
-#         - mariadb.initialize
-# Not very DRY but I need an extra volume
-- name: Ensure MariaDB container
-  community.general.docker_container:
-    name: '{{ container_name }}'
-    state: started
-    image: "mariadb:{{ mariadb_version }}"
-    env:
-      MARIADB_ROOT_PASSWORD: "{{ mariadb_secrets.root_password }}"
-    ports:
-      - "{{ mariadb_port }}:3306"
-    volumes:
-      - "{{ mariadb_data_path }}:/var/lib/mysql"
-      - "{{ output_backup_dir }}:/var/mariadb_backup"
+- name: MariaDB_run
+  include_tasks:
+    file: run.yml
+    apply:
+      tags:
+        - mariadb.initialize
 
 - name: Make sure the DB have started
   ansible.builtin.pause:
-    prompt: "Please Make sure the DB have started. Then press enter"
+    prompt: "Please Make sure the DB have started. Then press enter to start DB upgrade"
 
 - name: "Upgrade primary"
   community.docker.docker_container_exec:
@@ -84,16 +71,6 @@
     login_user: "{{ mariadb_secrets.superuser.user }}"
     login_password: "{{ mariadb_secrets.superuser.password }}"
 
-- name: MariaDB_run
-  include_tasks:
-    file: run.yml
-    apply:
-      tags:
-        - mariadb.initialize
-
-- name: Make sure the DB have restarted
-  ansible.builtin.pause:
-    prompt: "Please Make sure the DB have restarted. Then press enter"
 
 - name: "Retrive current binlog position"
   community.mysql.mysql_query:
@@ -131,7 +108,6 @@
 - name: backup output
   ansible.builtin.debug:
     var: _backup_result
-
 
 # Now it is time to switch the virtual IP:
 # On the old primary (futur replica) server:
