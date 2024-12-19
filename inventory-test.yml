@@ -28,7 +28,6 @@ mariadb_primaries:
       container_name: mariadb_primary
       mycnf_name: my_primary.cnf
       output_backup_dir: "{{ shared_path }}/initial_replica_transfer"
-      binlog_position_path: "{{ shared_path }}/initial_binlog_position.txt"
       replica_hostnames:
         - exopgesrv86.epfl.ch
 
@@ -36,12 +35,11 @@ mariadb_replicas:
   hosts:
     maria2:
       server_id: 2
-      mariadb_port: 3307
+      mariadb_port: 3306
       folder_name: "{{ host_basename }}_replica"
       container_name: mariadb_replica
       mycnf_name: my_replica.cnf
       input_backup_dir: "{{ shared_path }}/initial_replica_transfer"
-      binlog_position_path: "{{ shared_path }}/initial_binlog_position.txt"
       primary_hostname: 128.178.109.22
       primary_port: 3306
 
