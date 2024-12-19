@@ -71,22 +71,23 @@
     login_host: 127.0.0.1
     login_port: "{{ mariadb_port }}"
     query: >
+      SET GLOBAL gtid_slave_pos = '0-1-2491';
+
+- name: "Configure replication"
+  community.mysql.mysql_query:
+    login_user: "{{ mariadb_secrets.superuser.user }}"
+    login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: >
       CHANGE MASTER TO
       MASTER_HOST='{{ primary_hostname }}',
       MASTER_USER='{{ mariadb_secrets.replicator.user }}',
       MASTER_PASSWORD='{{ mariadb_secrets.replicator.password }}',
       MASTER_PORT={{ primary_port }},
-      MASTER_LOG_FILE='{{ _binlog.File }}',
-      MASTER_LOG_POS={{ _binlog.Position }},
+      MASTER_USE_GTID = slave_pos,
       MASTER_CONNECT_RETRY=10;
 
-# - name: "Ensure GTID is enabled"
-#   community.mysql.mysql_query:
-#     login_user: "{{ mariadb_secrets.superuser.user }}"
-#     login_password: "{{ mariadb_secrets.superuser.password }}"
-#     login_host: 127.0.0.1
-#     login_port: "{{ mariadb_port }}"
-#     query: CHANGE MASTER TO MASTER_USE_GTID = slave_pos
 
 - name: "Start replicating"
   community.mysql.mysql_query:
