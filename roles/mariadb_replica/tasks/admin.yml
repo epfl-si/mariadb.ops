@@ -1,32 +1,15 @@
 ---
-
-- name: "Upgrade primary"
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: "mariadb-upgrade --user={{ mariadb_secrets.superuser.user }} --host=127.0.0.1 --port=3306 --verbose --password={{ mariadb_secrets.superuser.password }}"
-  register: _upgrade_result
-  changed_when: >-
-    "MariaDB is already upgraded" not in _upgrade_result.stdout
-  tags:
-    - mariadb.upgrade
-
-
-- name: "Read binlog position"
-  ansible.builtin.slurp:
-    src: "{{ binlog_position_path }}"
-  register: _binlog_position
+- name: "Read binlog position file"
+  ansible.builtin.shell:
+    cmd: 
+      awk '{printf $3; exit;}' {{ input_backup_dir }}/mariadb_backup_binlog_info
+  register: _binlog_filecontent
   tags:
     - mariadb.binlogpos
 
-- name: "Interprete binlog_position"
+- name: "Transform the binlog file content to usable variable"
   ansible.builtin.set_fact:
-    _binlog_raw: "{{ _binlog_position.content | b64decode | from_json }}" 
-  tags:
-    - mariadb.binlogpos
-
-- name: Extract interesting part from binlog_position output
-  ansible.builtin.set_fact:
-    _binlog: "{{ _binlog_raw['query_result'][0][0] }}" 
+    _binlog: "{{ _binlog_filecontent.stdout }}"
   tags:
     - mariadb.binlogpos
 
@@ -35,16 +18,3 @@
     var: _binlog
   tags:
     - mariadb.binlogpos
-
-
-- name: "Debug binlog position"
-  ansible.builtin.debug:
-    msg: "position: {{ _binlog.Position }}     file: {{ _binlog.File }}"
-  tags:
-    - mariadb.binlogpos
-
-# - name: "Debug binlog position"
-#   ansible.builtin.debug:
-#     msg: "{{ _binlog['query_result'][0][0]['Position'] }}"
-#   tags:
-#     - mariadb.binlogpos

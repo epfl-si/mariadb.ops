@@ -29,6 +29,8 @@ mariadb_primaries:
       mycnf_name: my_primary.cnf
       output_backup_dir: "{{ shared_path }}/initial_replica_transfer"
       binlog_position_path: "{{ shared_path }}/initial_binlog_position.txt"
+      replica_hostnames:
+        - exopgesrv86.epfl.ch
 
 mariadb_replicas:
   hosts:

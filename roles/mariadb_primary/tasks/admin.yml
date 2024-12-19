@@ -8,18 +8,38 @@
   changed_when: >-
     "MariaDB is already upgraded" not in _upgrade_result.stdout
   tags:
-    - mariadb.upgrade
+    - mariadb.upgrade_primary
 
-
-
-- name: Create database user for replica
-  community.mysql.mysql_user:
-    name: "{{ mariadb_secrets.replicator.user }}"
-    password: "{{ mariadb_secrets.replicator.password }}"
-    host: "%"
-    priv: '*.*:REPLICATION SLAVE'
-    state: present
+- name: "Create database user for replica"
+  with_items: "{{ replica_hostnames }}"
+  community.mysql.mysql_query:
     login_user: "{{ mariadb_secrets.superuser.user }}"
     login_password: "{{ mariadb_secrets.superuser.password }}"
+    login_host: 127.0.0.1
+    login_port: "{{ mariadb_port }}"
+    query: >
+      GRANT REPLICATION SLAVE ON *.* 
+        TO '{{ mariadb_secrets.replicator.user}}'@'{{ item }}' 
+        IDENTIFIED BY PASSWORD '{{ mariadb_secrets.replicator.password }}'
   tags:
     - mariadb.fixreplicator
+
+- name: "Backup primary to transfer backup directory"
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: "{{ item }}"
+  with_items:
+    - "rm -rf /var/mariadb_backup/*"
+    - "/usr/bin/mariadb-backup --backup --target-dir=/var/mariadb_backup --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }} --binlog-info=ON"
+    - "/usr/bin/mariadb-backup --prepare --target-dir=/var/mariadb_backup"
+    # TODO: both commands output "completed OK!" if correctly finished
+  register: _backup_result
+  tags:
+    - mariadb.rebackup
+
+- name: backup output
+  ansible.builtin.debug:
+    var: _backup_result
+  tags:
+    - mariadb.rebackup
+

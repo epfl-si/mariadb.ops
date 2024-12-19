@@ -32,15 +32,13 @@
 
 - name: Stop writes into the original DB (Varnish tricks...)
   ansible.builtin.pause:
-    prompt: "Please stop wp-admin from Varnish"
+    prompt: "Please stop wp-admin from Varnish and FLUSH TABLES WITH READ LOCK on the old master server"
 
 - name: One more quick sync of remote original data
   shell:
     cmd: "rsync -av {{ old_data_source }}/ {{ mariadb_data_path }}/"
   vars:
     ansible_ssh_extra_args: -A
-  # when:
-  #   - not _mariadb_data_dir.stat.exists
 
 - name: MariaDB_run
   include_tasks:
@@ -61,40 +59,28 @@
   changed_when: >-
     "MariaDB is already upgraded" not in _upgrade_result.stdout
 
-- name: Create database user for replica
-  community.mysql.mysql_user:
-    name: "{{ mariadb_secrets.replicator.user }}"
-    password: "{{ mariadb_secrets.replicator.password }}"
-    host: "%"
-    priv: '*.*:REPLICATION SLAVE'
-    state: present
-    login_user: "{{ mariadb_secrets.superuser.user }}"
-    login_password: "{{ mariadb_secrets.superuser.password }}"
-
-
-- name: "Retrive current binlog position"
+- name: "Create database user for replica"
+  with_items: "{{ replica_hostnames }}"
   community.mysql.mysql_query:
     login_user: "{{ mariadb_secrets.superuser.user }}"
     login_password: "{{ mariadb_secrets.superuser.password }}"
     login_host: 127.0.0.1
     login_port: "{{ mariadb_port }}"
-    query: SHOW MASTER STATUS
-  register: _binlog_position
-  tags:
-    - mariadb.binlogpos
+    query: >
+      GRANT REPLICATION SLAVE ON *.* 
+        TO '{{ mariadb_secrets.replicator.user}}'@'{{ item }}' 
+        IDENTIFIED BY PASSWORD '{{ mariadb_secrets.replicator.password }}'
 
-
-- name: Make sure the DB have restarted
-  ansible.builtin.pause:
-    prompt: "Changed vip to {{ ansible_host }} and Start  wp-admin from Varnish "
-
-
-- name: "Save binlog position into file in shared path"
-  ansible.builtin.copy:
-    dest: "{{ binlog_position_path }}"
-    content: "{{ _binlog_position }}" 
-  tags:
-    - mariadb.binlogpos
+# TODO: for some reason this does not work. Why?
+# - name: Create database user for replica
+#   community.mysql.mysql_user:
+#     name: "{{ mariadb_secrets.replicator.user }}"
+#     password: "{{ mariadb_secrets.replicator.password }}"
+#     host: "%"
+#     priv: '*.*:REPLICATION SLAVE'
+#     state: present
+#     login_user: "{{ mariadb_secrets.superuser.user }}"
+#     login_password: "{{ mariadb_secrets.superuser.password }}"
 
 - name: "Backup primary to transfer backup directory"
   community.docker.docker_container_exec:

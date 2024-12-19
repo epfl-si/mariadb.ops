@@ -31,6 +31,6 @@
       tags:
         - never
   tags:
-    - mariadb.upgrade
-    - mariadb.binlogpos
     - mariadb.fixreplicator
+    - mariadb.rebackup
+    - mariadb.upgrade_primary

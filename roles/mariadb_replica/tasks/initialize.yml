@@ -1,7 +1,7 @@
 ---
-# # This set of tasks will run only an a pristine server: no data should be present
+# This set of tasks will run only an a pristine server: no data should be present
 
-# # TODO: add task with tag "nuke" to restart from scrach deleting all the data
+# TODO: add task with tag "nuke" to restart from scrach deleting all the data
 
 - name: Check if MariaDB initial data folder exists
   ansible.builtin.stat:
@@ -38,7 +38,7 @@
 
 - name: "Make sure the DB have started"
   ansible.builtin.pause:
-    prompt: "Wait few seconds and then press Enter to allowPlease Make sure the DB have started. Then press enter"
+    prompt: "Wait few seconds and then press Enter to avoid issues with NFS synchronization"
 
 - name: MariaDB_run
   include_tasks:
@@ -51,18 +51,15 @@
   ansible.builtin.pause:
     prompt: "Please Make sure the DB have started. Then press enter"
 
-- name: "Read binlog position"
-  ansible.builtin.slurp:
-    src: "{{ binlog_position_path }}"
-  register: _binlog_position
+- name: "Read binlog position file"
+  ansible.builtin.shell:
+    cmd: 
+      awk '{printf $3; exit;}' {{ input_backup_dir }}/mariadb_backup_binlog_info
+  register: _binlog_filecontent
 
-- name: "Interprete binlog_position"
+- name: "Transform the binlog file content to usable variable"
   ansible.builtin.set_fact:
-    _binlog_raw: "{{ _binlog_position.content | b64decode | from_json }}" 
-
-- name: "Extract interesting part from binlog_position output"
-  ansible.builtin.set_fact:
-    _binlog: "{{ _binlog_raw['query_result'][0][0] }}" 
+    _binlog: "{{ _binlog_filecontent.stdout }}"
 
 - name: "Configure replication"
   community.mysql.mysql_query:
@@ -70,29 +67,14 @@
     login_password: "{{ mariadb_secrets.superuser.password }}"
     login_host: 127.0.0.1
     login_port: "{{ mariadb_port }}"
-    query: >
-      SET GLOBAL gtid_slave_pos = '0-1-2491';
-
-- name: "Configure replication"
-  community.mysql.mysql_query:
-    login_user: "{{ mariadb_secrets.superuser.user }}"
-    login_password: "{{ mariadb_secrets.superuser.password }}"
-    login_host: 127.0.0.1
-    login_port: "{{ mariadb_port }}"
-    query: >
-      CHANGE MASTER TO
-      MASTER_HOST='{{ primary_hostname }}',
-      MASTER_USER='{{ mariadb_secrets.replicator.user }}',
-      MASTER_PASSWORD='{{ mariadb_secrets.replicator.password }}',
-      MASTER_PORT={{ primary_port }},
-      MASTER_USE_GTID = slave_pos,
-      MASTER_CONNECT_RETRY=10;
-
-
-- name: "Start replicating"
-  community.mysql.mysql_query:
-    login_user: "{{ mariadb_secrets.superuser.user }}"
-    login_password: "{{ mariadb_secrets.superuser.password }}"
-    login_host: 127.0.0.1
-    login_port: "{{ mariadb_port }}"
-    query: "START SLAVE"
+    query:
+      - SET GLOBAL gtid_slave_pos = '{{ _binlog }}';
+      - >
+        CHANGE MASTER TO
+        MASTER_HOST='{{ primary_hostname }}',
+        MASTER_USER='{{ mariadb_secrets.replicator.user }}',
+        MASTER_PASSWORD='{{ mariadb_secrets.replicator.password }}',
+        MASTER_PORT={{ primary_port }},
+        MASTER_USE_GTID = slave_pos,
+        MASTER_CONNECT_RETRY=10;
+      - START SLAVE
