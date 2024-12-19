@@ -6,7 +6,7 @@ all:
       ansible_port: 22
       host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
     maria2:
-      ansible_host: exopgesrv85.epfl.ch
+      ansible_host: exopgesrv86.epfl.ch
       ansible_user: root
       ansible_port: 22
       host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
@@ -40,6 +40,6 @@ mariadb_replicas:
       mycnf_name: my_replica.cnf
       input_backup_dir: "{{ shared_path }}/initial_replica_transfer"
       binlog_position_path: "{{ shared_path }}/initial_binlog_position.txt"
-      primary_hostname: 172.17.0.1
+      primary_hostname: 128.178.109.22
       primary_port: 3306
 
