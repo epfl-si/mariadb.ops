@@ -1,13 +1,45 @@
 all:
-  children:
-    vms:
-      children:
-        vms_prod:
-          hosts:
-            exopgesrv00.xaas.epfl.ch:
-            exopgesrv00.xaas.epfl.ch:
-          vars:
-            inventory_environment: prod
-            ansible_user: root
-            ansible_python_interpreter: /usr/bin/python3.9
-            vip_address: ""
+  hosts:
+    maria1:
+      ansible_host: exopgesrv61.epfl.ch
+      ansible_user: root
+      ansible_port: 22
+      host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
+    maria2:
+      ansible_host: exopgepc1.epfl.ch
+      ansible_user: root
+      ansible_port: 22
+      host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
+  vars:
+    inventory_environment: test
+    shared_path: '/mnt/mariadb_shared'
+    nfs_shares:
+      - src: 'nas-app-ma-nfs1.epfl.ch:si_mysql_wp_binlogs_app'
+        mount: "{{ shared_path }}"
+    vip_address: "128.178.109.9"
+  # children:
+mariadb_primaries:
+  hosts:
+    maria1:
+      old_data_source: root@exopgepc1.epfl.ch:/var/lib/mysql
+      server_id: 1
+      mariadb_port: 3306
+      folder_name: "{{ host_basename }}_primary"
+      container_name: mariadb_primary
+      mycnf_name: my_primary.cnf
+      output_backup_dir: "{{ shared_path }}/initial_replica_transfer"
+      replica_hostnames:
+        - exopgepc1.epfl.ch
+
+mariadb_replicas:
+  hosts:
+    maria2:
+      server_id: 2
+      mariadb_port: 3306
+      folder_name: "{{ host_basename }}_replica"
+      container_name: mariadb_replica
+      mycnf_name: my_replica.cnf
+      input_backup_dir: "{{ shared_path }}/initial_replica_transfer"
+      primary_hostname: exopgesrv61.epfl.ch
+      primary_port: 3306
+
