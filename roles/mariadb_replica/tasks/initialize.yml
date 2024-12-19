@@ -29,7 +29,7 @@
       - "{{ mariadb_data_path }}:/var/lib/mysql"
       - "{{ input_backup_dir }}:/var/mariadb_backup"
     entrypoint: "/bin/bash"
-    command: -c "mariadb-backup --move-back --target-dir=/var/mariadb_backup"
+    command: -c "mariadb-backup --copy-back --target-dir=/var/mariadb_backup"
   register: _restore_result
 
 - name: backup output
@@ -80,13 +80,13 @@
       MASTER_LOG_POS={{ _binlog.Position }},
       MASTER_CONNECT_RETRY=10;
 
-- name: "Ensure GTID is enabled"
-  community.mysql.mysql_query:
-    login_user: "{{ mariadb_secrets.superuser.user }}"
-    login_password: "{{ mariadb_secrets.superuser.password }}"
-    login_host: 127.0.0.1
-    login_port: "{{ mariadb_port }}"
-    query: CHANGE MASTER TO MASTER_USE_GTID = slave_pos
+# - name: "Ensure GTID is enabled"
+#   community.mysql.mysql_query:
+#     login_user: "{{ mariadb_secrets.superuser.user }}"
+#     login_password: "{{ mariadb_secrets.superuser.password }}"
+#     login_host: 127.0.0.1
+#     login_port: "{{ mariadb_port }}"
+#     query: CHANGE MASTER TO MASTER_USE_GTID = slave_pos
 
 - name: "Start replicating"
   community.mysql.mysql_query:
