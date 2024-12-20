@@ -1,0 +1,53 @@
+all:
+  hosts:
+    # # this is the old slave but it is still RH6. We do not run ansible here!
+    # maria2_prod:
+    #   ansible_host: exopgepc1.epfl.ch
+    #   ansible_user: root
+    #   ansible_port: 22
+    #   host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
+    #   vgs: []
+    #   lvs: []
+
+    # this is the future master but we start it as slave of the old slave
+    maria3_prod:
+      ansible_host: itswbhst0026.xaas.epfl.ch
+      ansible_user: root
+      ansible_port: 22
+      host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
+      vgs:
+      - pvs: "/dev/sdb"
+        vg_name: "data-vg"
+      lvs:
+      - vg_name: "data-vg"
+        lv_name: "mariadb"
+        lv_size: "80g"
+        fstype: "ext4"
+        path: "/srv/mariadb"
+
+  vars:
+    inventory_environment: test
+    shared_path: '/mnt/mariadb_shared'
+    nfs_shares:
+      - src: 'nas-app-ma-nfs1.epfl.ch:si_mysql_wp_binlogs_app'
+        mount: "{{ shared_path }}"
+    # vip_address: "128.178.109.64"
+
+mariadb_primaries:
+  hosts:
+    maria3_prod:
+      # ssh not yet available between the two machines. Passing via nfs share.
+      # old_data_source: "root@exopgepc1.epfl.ch:/var/lib/mysql-snap"
+      old_data_source: /mnt/mariadb_shared/initial_replica_transfer
+      server_id: 3
+      mariadb_port: 3306
+      folder_name: "{{ host_basename }}_primary"
+      container_name: mariadb_primary_next
+      mycnf_name: my_primary.cnf
+      output_backup_dir: /mnt/mariadb_shared/initial_replica_transfer
+      replica_hostnames: []
+  vars:
+    snapshot_enabled: false
+
+mariadb_replicas:
+  hosts:

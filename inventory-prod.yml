@@ -1,11 +1,11 @@
 all:
   hosts:
-    maria1:
+    maria1_prod:
       ansible_host: exopgesrv61.epfl.ch
       ansible_user: root
       ansible_port: 22
       host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
-    maria2:
+    maria2_prod:
       ansible_host: exopgepc1.epfl.ch
       ansible_user: root
       ansible_port: 22
@@ -20,7 +20,7 @@ all:
   # children:
 mariadb_primaries:
   hosts:
-    maria1:
+    maria1_prod:
       old_data_source: root@exopgepc1.epfl.ch:/var/lib/mysql
       server_id: 1
       mariadb_port: 3306
@@ -33,7 +33,7 @@ mariadb_primaries:
 
 mariadb_replicas:
   hosts:
-    maria2:
+    maria2_prod:
       server_id: 2
       mariadb_port: 3306
       folder_name: "{{ host_basename }}_replica"

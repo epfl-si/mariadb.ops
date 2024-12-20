@@ -1,15 +1,35 @@
 all:
   hosts:
-    maria1:
+    maria1_test:
       ansible_host: exopgesrv85.epfl.ch
       ansible_user: root
       ansible_port: 22
       host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
-    maria2:
+      vgs:
+        # pvs is a comma separated list
+      - pvs: "/dev/sda3"
+        vg_name: "ubuntu-vg"
+      lvs:
+      - vg_name: "ubuntu-vg"
+        lv_name: "mariadb"
+        lv_size: "10g"
+        fstype: "ext4"
+        path: "/srv/mariadb"
+    maria2_test:
       ansible_host: exopgesrv86.epfl.ch
       ansible_user: root
       ansible_port: 22
       host_basename: "{{ ansible_host | regex_replace('\\..*$', '') }}"
+      vgs:
+        # pvs is a comma separated list
+      - pvs: "/dev/sda3"
+        vg_name: "ubuntu-vg"
+      lvs:
+      - vg_name: "ubuntu-vg"
+        lv_name: "mariadb"
+        lv_size: "10g"
+        fstype: "ext4"
+        path: "/srv/mariadb"
   vars:
     inventory_environment: test
     shared_path: '/mnt/mariadb_shared'
@@ -20,7 +40,7 @@ all:
   # children:
 mariadb_primaries:
   hosts:
-    maria1:
+    maria1_test:
       old_data_source: root@exopgesrv86:/var/lib/mysql
       server_id: 1
       mariadb_port: 3306
@@ -33,7 +53,7 @@ mariadb_primaries:
 
 mariadb_replicas:
   hosts:
-    maria2:
+    maria2_test:
       server_id: 2
       mariadb_port: 3306
       folder_name: "{{ host_basename }}_replica"
@@ -42,4 +62,3 @@ mariadb_replicas:
       input_backup_dir: "{{ shared_path }}/initial_replica_transfer"
       primary_hostname: 128.178.109.22
       primary_port: 3306
-

@@ -38,10 +38,10 @@ while [ "$#" -gt 0 ]; do
       inventory_mode="test"
       shift ;;
     --prod)
-      inventory_mode="prod"
+      inventory_mode="prod2"
       shift ;;
     --all)
-      inventory_mode="test-and-prod"
+      inventory_mode="all"
       shift ;;
     *)
       ansible_args+=("$1")
@@ -51,9 +51,8 @@ done
 
 inventories () {
   case "$inventory_mode" in
-    test)          echo "-i inventory-test.yml" ;;
-    prod)          echo "-i inventory-prod.yml" ;;
-    test-and-prod) echo "-i inventory-test.yml -i inventory-prod.yml" ;;
+    all) echo "-i inventory-test.yml -i inventory-prod.yml" ;;
+    *)   echo "-i inventory-${inventory_mode}.yml" ;;
   esac
 }
 

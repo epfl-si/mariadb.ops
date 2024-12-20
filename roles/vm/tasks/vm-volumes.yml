@@ -6,3 +6,44 @@
     opts: '{{ item.options | default("rw,sync,hard") }}'
     state: mounted
     fstype: nfs
+
+# pvcreate /dev/sda
+# vgcreate data /dev/sda
+# lvcreate -L 80G -n mariadata data
+# echo "/dev/data/mariadata /srv/mariadb ext4 defaults 0 1" >> /etc/fstab
+# mount /srv/mariadb
+
+- name: Ensure data vgs
+  with_items: "{{ vgs }}"
+  community.general.lvg:
+    vg: "{{ item.vg_name }}"
+    pvs: "{{ item.pvs}}"
+
+
+- name: Ensure lv for mariadb data
+  with_items: "{{ lvs }}"
+  community.general.lvol:
+    vg: "{{ item.vg_name }}"
+    lv: "{{ item.lv_name }}"
+    size: "{{ item.lv_size }}"
+
+- name: Ensure filesystem on lv volumes
+  with_items: "{{ lvs }}"
+  community.general.filesystem:
+    dev: "/dev/{{ item.vg_name }}/{{ item.lv_name }}"
+    fstype: "{{ item.fstype }}"
+
+- name: Ensure mount points for lv volume is present
+  with_items: "{{ lvs }}"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+
+- name: Ensure lv volume is mounted
+  with_items: "{{ lvs }}"
+  ansible.posix.mount:
+    path: "{{ item.path }}"
+    src: "/dev/{{ item.vg_name }}/{{ item.lv_name }}"
+    state: mounted
+    fstype: "{{ item.fstype }}"
+    boot: true
