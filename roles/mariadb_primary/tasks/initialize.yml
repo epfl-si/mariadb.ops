@@ -16,7 +16,6 @@
   with_items:
     - "{{ mariadb_data_path }}"
     - "{{ mariadb_cnf_path | dirname }}"
-    - "{{ output_backup_dir }}"
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -82,20 +81,7 @@
 #     login_user: "{{ mariadb_secrets.superuser.user }}"
 #     login_password: "{{ mariadb_secrets.superuser.password }}"
 
-- name: "Backup primary to transfer backup directory"
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: "{{ item }}"
-  with_items:
-    - "rm -rf /var/mariadb_backup/*"
-    - "/usr/bin/mariadb-backup --backup --target-dir=/var/mariadb_backup --user={{ mariadb_secrets.superuser.user }} --password={{ mariadb_secrets.superuser.password }} --binlog-info=ON"
-    - "/usr/bin/mariadb-backup --prepare --target-dir=/var/mariadb_backup"
-    # TODO: both commands output "completed OK!" if correctly finished
-  register: _backup_result
-
-- name: backup output
-  ansible.builtin.debug:
-    var: _backup_result
+# Backup step moved to admin. Trigger with `-t mariadb.backup_primary`
 
 # Now it is time to switch the virtual IP:
 # On the old primary (futur replica) server:

@@ -24,6 +24,11 @@
   tags:
     - mariadb.fixreplicator
 
+- name: Ensure shared backup directory
+  ansible.builtin.file:
+    path: "{{ output_backup_dir }}"
+    state: directory
+
 - name: "Backup primary to transfer backup directory"
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
@@ -35,11 +40,10 @@
     # TODO: both commands output "completed OK!" if correctly finished
   register: _backup_result
   tags:
-    - mariadb.rebackup
+    - mariadb.backup_primary
 
 - name: backup output
   ansible.builtin.debug:
     var: _backup_result
   tags:
-    - mariadb.rebackup
-
+    - mariadb.backup_primary
