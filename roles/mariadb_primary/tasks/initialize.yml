@@ -1,7 +1,7 @@
 ---
-# # This set of tasks will run only an a pristine server: no data should be present
+# This set of tasks will run only an a pristine server: no data should be present
 
-# # TODO: add task with tag "nuke" to restart from scrach deleting all the data
+# TODO: add task with tag "nuke" to restart from scrach deleting all the data
 
 - name: Check if MariaDB initial data folder exists
   ansible.builtin.stat:
@@ -21,21 +21,21 @@
     state: directory
 
 # MariaDB 10.4 can't import database dump created before 10.4: https://jira.mariadb.org/browse/MDEV-22127
+# If we relay on lvm snapshots, this should not be necessary.
 - name: Prefetch remote original data
+  when: "{{ prefetch_data_source | default('false') | bool }}"
   shell:
-    cmd: "rsync -av {{ old_data_source }}/ {{ mariadb_data_path }}/"
+    cmd: "rsync -av --delete {{ old_data_source }}/ {{ mariadb_data_path }}/"
   vars:
     ansible_ssh_extra_args: -A
-  # when:
-  #   - not _mariadb_data_dir.stat.exists
 
 - name: Stop writes into the original DB (Varnish tricks...)
   ansible.builtin.pause:
-    prompt: "Please stop wp-admin from Varnish and FLUSH TABLES WITH READ LOCK on the old master server"
+    prompt: "Please stop FLUSH TABLES [ WITH READ LOCK ] and create lvm snapshot. Then press enter to continue."
 
-- name: One more quick sync of remote original data
+- name: Sync data snapshot (or data while server write locked or down)
   shell:
-    cmd: "rsync -av {{ old_data_source }}/ {{ mariadb_data_path }}/"
+    cmd: "rsync -av --delete {{ old_data_source }}/ {{ mariadb_data_path }}/"
   vars:
     ansible_ssh_extra_args: -A
 
